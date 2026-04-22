@@ -1,1 +1,185 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>坦克大战</title><style>body{display:flex;justify-content:center;align-items:center;min-height:100vh;background:#1a1a2e;color:#fff;font-family:Arial}#game{display:flex;gap:20px;background:rgba(0,0,0,0.5);padding:20px;border-radius:15px}#canvas{border:3px solid #4a4a6a;border-radius:5px;background:#000}#panel{width:200px;background:rgba(255,255,255,0.1);padding:20px;border-radius:10px}#score{font-size:20px;color:#4ecdc4;text-align:center;margin:10px 0}#health{display:flex;justify-content:space-between;align-items:center}#bar{width:100%;height:10px;background:#333;border-radius:5px;overflow:hidden;margin-top:5px}#fill{height:100%;background:#4ecdc4;transition:width 0.2s;width:100%}#btn{width:100%;padding:15px;margin:10px 0;border:none;border-radius:5px;font-size:16px;font-weight:bold;cursor:pointer;background:linear-gradient(45deg,#11998e,#38ef7d);color:#fff}#info{font-size:12px;color:#aaa;margin-top:20px;line-height:1.8}</style></head><body><div id="game"><canvas id="canvas" width="800" height="500"></canvas><div id="panel"><h2>坦克大战</h2><div id="score">得分：0</div><div id="health"><span>生命值</span><div id="bar"><div id="fill"></div></div></div><button id="btn" onclick="start()">开始游戏</button><div id="info">W/A/S/D 移动<br>空格射击</div></div></div><script>var c=document.getElementById('canvas'),cx=c.getContext('2d'),w=800,h=500,run=false,s=0,h=100;p={x:50,y:450,a:0,s:2};var b=[],e=[];document.onkeydown=function(k){if(!run)return;if(k.code==='KeyW'){p.y-=p.s;return}if(k.code==='KeyS'){p.y+=p.s;return}if(k.code==='KeyA'){p.x-=p.s;return}if(k.code==='KeyD'){p.x+=p.s;return}if(k.code==='Space'){shoot(p);return}};function start(){run=true;s=0;h=100;p.x=50;p.y=450;e=[];b=[];c.innerHTML='';cx.clearRect(0,0,w,h);t()}function t(){if(!run)return;if(p.x<0||p.x>w-30)p.x=p.x<0?0:w-30;if(p.y<0||p.y<h-30)p.y=p.y<0?0:h-30;cx.save();cx.translate(p.x+15,p.y+15);cx.rotate(p.a);cx.fillStyle='#4ecdc4';cx.fillRect(-15,-15,30,30);cx.fillStyle='#2d2d2d';cx.fillRect(-18,-15,3,30);cx.fillRect(15,-15,3,30);cx.fillStyle='#444';cx.fillRect(-3,-20,6,20);cx.restore();e.forEach(function(n){cx.save();cx.translate(n.x+15,n.y+15);cx.rotate(n.a);cx.fillStyle='#e74c3c';cx.fillRect(-15,-15,30,30);cx.restore();});b.forEach(function(x){cx.fillStyle=x?'#ffff00':'#ff4444';cx.beginPath();cx.arc(x.x,x.y,5,0,Math.PI*2);cx.fill();});e.forEach(function(n){n.y+=0.5;if(n.y<50){var dx=p.x-n.x,dy=p.y-n.y,d=Math.sqrt(dx*dx+dy*dy);if(d>0){n.x+=(dx/d)*1.5;n.y+=(dy/d)*1.5}n.a=Math.atan2(dy,dx);});b.forEach(function(x){x.x+=x.vx;x.y+=x.vy;});b=b.filter(function(x){if(x.x<0||x.x>w||x.y<0||x.y>h){return false}if(!x){if(x.x>p.x+2&&x.x<p.x+28&&x.y>p.y+2&&x.y<p.y+28){h-=1;if(h<=0){run=false;alert('游戏结束！得分：'+s);}return false}return true}e.forEach(function(n){if(n.dead)return;if(x.x>n.x-8&&x.x<n.x+38&&x.y>n.y-8&&x.y<n.y+38){s+=10;n.dead=true;x.dead=true}if(n.y>20){n.vx=(p.x-n.x)/10;n.vy=(p.y-n.y)/10}else{n.vy=-1.5}});return true});document.getElementById('score').innerHTML='得分：'+s;document.getElementById('fill').style.width=Math.max(0,h)+'%';setTimeout(t,20);return}c.innerHTML='';cx.fillStyle='#000';cx.fillRect(0,0,w,h);console.log('游戏已加载');}</script></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>坦克大战</title>
+<style>
+body{display:flex;justify-content:center;align-items:center;min-height:100vh;background:#1a1a2e;color:#fff;font-family:Arial}
+#game{display:flex;gap:20px;background:rgba(0,0,0,0.5);padding:20px;border-radius:15px}
+#canvas{border:3px solid #4a4a6a;border-radius:5px;background:#000}
+#panel{width:200px;background:rgba(255,255,255,0.1);padding:20px;border-radius:10px}
+#score{font-size:20px;color:#4ecdc4;text-align:center;margin:10px 0}
+#health{display:flex;justify-content:space-between;align-items:center}
+#bar{width:100%;height:10px;background:#333;border-radius:5px;overflow:hidden;margin-top:5px}
+#fill{height:100%;background:#4ecdc4;transition:width 0.2s;width:100%}
+#btn{width:100%;padding:15px;margin:10px 0;border:none;border-radius:5px;font-size:16px;font-weight:bold;cursor:pointer;background:linear-gradient(45deg,#11998e,#38ef7d);color:#fff}
+#info{font-size:12px;color:#aaa;margin-top:20px;line-height:1.8}
+</style>
+</head>
+<body>
+<div id="game">
+<canvas id="canvas" width="800" height="500"></canvas>
+<div id="panel">
+<h2>坦克大战</h2>
+<div id="score">得分：0</div>
+<div id="health"><span>生命值</span><div id="bar"><div id="fill"></div></div></div>
+<button id="btn">开始游戏</button>
+<div id="info">W/A/S/D 移动<br>空格射击</div>
+</div>
+</div>
+<script>
+var canvas=document.getElementById('canvas');
+var ctx=canvas.getContext('2d');
+var width=800,height=500;
+var running=false,score=0,playerHP=100;
+var player={x:50,y:450,angle:0,speed:2.5};
+var bullets=[],enemies=[];
+
+document.addEventListener('keydown',function(e){
+    if(!running)return;
+    if(e.code==='KeyW'){player.y-=player.speed;return;}
+    if(e.code==='KeyS'){player.y+=player.speed;return;}
+    if(e.code==='KeyA'){player.x-=player.speed;return;}
+    if(e.code==='KeyD'){player.x+=player.speed;return;}
+    if(e.code==='Space'){shootPlayer();return;}
+});
+
+function shootPlayer(){
+    bullets.push({x:player.x+12,y:player.y+12,angle:player.angle,player:true});
+}
+
+function startGame(){
+    running=true;
+    score=0;
+    playerHP=100;
+    player.x=50;
+    player.y=450;
+    enemies=[];
+    bullets=[];
+    canvas.innerHTML='';
+    gameLoop();
+}
+
+function gameLoop(){
+    if(!running)return;
+
+    // 边界检查
+    if(player.x<0||player.x>width-30)player.x=player.x<0?0:width-30;
+    if(player.y<0||player.y>height-30)player.y=player.y<0?0:height-30;
+
+    // 绘制玩家
+    ctx.save();
+    ctx.translate(player.x+15,player.y+15);
+    ctx.rotate(player.angle);
+    ctx.fillStyle='#4ecdc4';
+    ctx.fillRect(-15,-15,30,30);
+    ctx.fillStyle='#2d2d2d';
+    ctx.fillRect(-18,-15,3,30);
+    ctx.fillRect(15,-15,3,30);
+    ctx.fillStyle='#444';
+    ctx.fillRect(-3,-20,6,20);
+    ctx.restore();
+
+    // 绘制敌人
+    enemies.forEach(function(enemy){
+        ctx.save();
+        ctx.translate(enemy.x+15,enemy.y+15);
+        ctx.rotate(enemy.angle);
+        ctx.fillStyle='#e74c3c';
+        ctx.fillRect(-15,-15,30,30);
+        ctx.restore();
+    });
+
+    // 绘制子弹
+    bullets.forEach(function(bullet){
+        ctx.fillStyle=bullet.player?'#ffff00':'#ff4444';
+        ctx.beginPath();
+        ctx.arc(bullet.x,bullet.y,5,0,Math.PI*2);
+        ctx.fill();
+    });
+
+    // 更新敌人
+    enemies.forEach(function(enemy){
+        enemy.y+=0.5;
+        if(enemy.y<50){
+            var dx=player.x-enemy.x;
+            var dy=player.y-enemy.y;
+            var dist=Math.sqrt(dx*dx+dy*dy);
+            if(dist>0){
+                enemy.x+=(dx/dist)*1.5;
+                enemy.y+=(dy/dist)*1.5;
+            }
+            enemy.angle=Math.atan2(dy,dx);
+        }
+    });
+
+    // 更新子弹
+    bullets.forEach(function(bullet){
+        bullet.x+=bullet.vx;
+        bullet.y+=bullet.vy;
+    });
+
+    // 过滤出界子弹
+    bullets=bullets.filter(function(bullet){
+        if(bullet.x<0||bullet.x>width||bullet.y<0||bullet.y>height){
+            return false;
+        }
+
+        // 玩家子弹击中敌人
+        if(bullet.player){
+            enemies.forEach(function(enemy){
+                if(bullet.x>enemy.x-8&&bullet.x<enemy.x+38&&bullet.y>enemy.y-8&&bullet.y<enemy.y+38){
+                    score+=10;
+                    bullet.hit=true;
+                }
+            });
+            return true;
+        }
+
+        // 敌人子弹击中玩家
+        if(!bullet.player){
+            if(bullet.x>player.x+2&&bullet.x<player.x+28&&bullet.y>player.y+2&&bullet.y<player.y+28){
+                playerHP-=1;
+                if(playerHP<=0){
+                    running=false;
+                    alert('游戏结束！得分：'+score);
+                }
+                bullet.hit=true;
+            }
+            return true;
+        }
+        return true;
+    });
+
+    // 生成新敌人
+    if(Math.random()<0.01){
+        var enemy={
+            x:Math.random()*width,
+            y:-50,
+            angle:Math.random()*Math.PI*2,
+            speed:0.5
+        };
+        enemies.push(enemy);
+    }
+
+    // 过滤死掉的敌人
+    enemies=enemies.filter(function(enemy){
+        return enemy.y<height-30;
+    });
+
+    // 更新 UI
+    document.getElementById('score').innerHTML='得分：'+score;
+    document.getElementById('fill').style.width=Math.max(0,playerHP)+'%';
+
+    // 继续循环
+    setTimeout(gameLoop,20);
+}
+
+// 初始化
+canvas.innerHTML='';
+ctx.fillStyle='#000';
+ctx.fillRect(0,0,width,height);
+console.log('游戏已加载！点击"开始游戏"按钮开始。');
+</script>
+</body>
+</html>
