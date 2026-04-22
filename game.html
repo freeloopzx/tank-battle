@@ -45,7 +45,15 @@ document.addEventListener('keydown',function(e){
 });
 
 function shootPlayer(){
-    bullets.push({x:player.x+12,y:player.y+12,angle:player.angle,player:true});
+    var angle=player.angle;
+    bullets.push({
+        x:player.x+12,
+        y:player.y+12,
+        angle:angle,
+        player:true,
+        vx:Math.cos(angle)*7,
+        vy:Math.sin(angle)*7
+    });
 }
 
 function startGame(){
@@ -54,9 +62,13 @@ function startGame(){
     playerHP=100;
     player.x=50;
     player.y=450;
+    player.angle=0;
     enemies=[];
     bullets=[];
     canvas.innerHTML='';
+    ctx.fillStyle='#000';
+    ctx.fillRect(0,0,width,height);
+    console.log('游戏启动！');
     gameLoop();
 }
 
