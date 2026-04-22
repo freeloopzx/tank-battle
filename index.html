@@ -24,7 +24,7 @@ body{display:flex;justify-content:center;align-items:center;min-height:100vh;bac
 <div id="score">得分：0</div>
 <div id="health"><span>生命值</span><div id="bar"><div id="fill"></div></div></div>
 <button id="btn" onclick="start()">开始游戏</button>
-<div id="info">W/A/S/D 移动<br>空格射击</div>
+<div id="info">W/A/S/D 移动<br>空格射击<br>↑/↓转向<br>↑/↓生成墙壁</div>
 </div>
 </div>
 <script>
@@ -33,22 +33,63 @@ var ctx=canvas.getContext('2d');
 var width=800,height=500;
 var running=false,score=0,playerHP=100;
 var player={x:100,y:450,angle:0,speed:2.5};
+var walls=[],boxes=[];
 var bullets=[],enemies=[];
 var lastShot=0;
 var canShoot=true;
 var keyDown={};
-document.addEventListener('keydown',function(e){
-    if(e.code==='Space'){e.preventDefault();}
-    keyDown[e.code]=true;
-    if(e.code==='KeyW'){player.y-=player.speed;return;}
-    if(e.code==='KeyS'){player.y+=player.speed;return;}
-    if(e.code==='KeyA'){player.x-=player.speed;return;}
-    if(e.code==='KeyD'){player.x+=player.speed;return;}
-});
-document.addEventListener('keyup',function(e){
-    keyDown[e.code]=false;
-    if(e.code==='Space'){canShoot=true;}
-});
+var enemySpeed=0.5;
+var enemyCount=0;
+var maxEnemies=5;
+
+function createWall(x,y,width,height){
+    walls.push({x:x,y:y,width:width,height:height,health:3});
+}
+function createBox(x,y,width,height){
+    boxes.push({x:x,y:y,width:width,height:height,health:1});
+}
+
+function generateMap(){
+    walls=[];
+    boxes=[];
+    // 生成随机墙壁
+    for(var i=0;i<10;i++){
+        walls.push({
+            x:Math.random()*(width-100),
+            y:Math.random()*(height-100),
+            width:80+Math.random()*40,
+            height:80+Math.random()*40,
+            health:3
+        });
+    }
+    // 生成箱子
+    for(var i=0;i<5;i++){
+        boxes.push({
+            x:Math.random()*(width-80),
+            y:Math.random()*(height-80),
+            width:60,
+            height:60,
+            health:1
+        });
+    }
+}
+
+function drawWall(w){
+    ctx.fillStyle=w.health>1?'#8b7355':'#654321';
+    ctx.fillRect(w.x,w.y,w.width,w.height);
+    // 墙壁纹理
+    ctx.strokeStyle='#553a24';
+    ctx.lineWidth=2;
+    ctx.strokeRect(w.x+5,w.y+5,w.width-10,w.height-10);
+}
+
+function drawBox(b){
+    ctx.fillStyle='#8b4513';
+    ctx.fillRect(b.x,b.y,b.width,b.height);
+    ctx.fillStyle='#cd853f';
+    ctx.fillRect(b.x+5,b.y+5,b.width-10,b.height-10);
+}
+
 function shootPlayer(){
     if(!canShoot)return;
     canShoot=false;
@@ -56,6 +97,7 @@ function shootPlayer(){
     bullets.push({x:player.x+12,y:player.y+12,vx:Math.cos(angle)*7,vy:Math.sin(angle)*7,player:true});
     setTimeout(function(){canShoot=true;},200);
 }
+
 function start(){
     running=true;
     score=0;
@@ -65,11 +107,20 @@ function start(){
     player.angle=0;
     enemies=[];
     bullets=[];
+    enemyCount=0;
+    generateMap();
     canvas.innerHTML='';
     ctx.fillStyle='#000';
     ctx.fillRect(0,0,width,height);
+    drawWallsAndBoxes();
     loop();
 }
+
+function drawWallsAndBoxes(){
+    walls.forEach(function(w){drawWall(w);});
+    boxes.forEach(function(b){drawBox(b);});
+}
+
 function loop(){
     if(!running)return;
     requestAnimationFrame(loop);
@@ -85,6 +136,8 @@ function loop(){
     ctx.fillStyle='#2d2d2d';
     ctx.fillRect(-18,-15,3,30);
     ctx.fillRect(15,-15,3,30);
+    ctx.fillStyle='#444';
+    ctx.fillRect(-3,-20,6,20);
     ctx.restore();
 
     enemies.forEach(function(enemy){
@@ -103,14 +156,26 @@ function loop(){
         ctx.fill();
     });
 
+    // 生成敌人
+    if(enemyCount<maxEnemies&&Math.random()<0.01){
+        enemies.push({x:Math.random()*width,y:-50,angle:Math.random()*Math.PI*2,speed:enemySpeed});
+        enemyCount++;
+    }
+
     enemies.forEach(function(enemy){
-        enemy.y+=0.3;
+        enemy.y+=enemy.speed;
         if(enemy.y<50){
             var dx=player.x-enemy.x,dy=player.y-enemy.y,d=Math.sqrt(dx*dx+dy*dy);
             if(d>0){enemy.x+=(dx/d)*1;enemy.y+=(dy/d)*1;}
             enemy.angle=Math.atan2(dy,dx);
         }
+        if(enemy.y>=height){
+            enemy.dead=true;
+            enemyCount--;
+        }
     });
+
+    enemies=enemies.filter(function(e){return!e.dead;});
 
     var now=Date.now();
     if(keyDown['Space']&&now-lastShot>300){
@@ -126,6 +191,7 @@ function loop(){
             enemies.forEach(function(e){
                 if(b.x>e.x-8&&b.x<e.x+38&&b.y>e.y-8&&b.y<e.y+38){
                     score+=10;
+                    e.hit=true;
                 }
             });
             return true;
@@ -140,15 +206,12 @@ function loop(){
         return true;
     });
 
-    if(Math.random()<0.01){
-        enemies.push({x:Math.random()*width,y:-50,angle:Math.random()*Math.PI*2});
-    }
-
-    enemies=enemies.filter(function(e){return e.y<height-30;});
+    drawWallsAndBoxes();
 
     document.getElementById('score').innerHTML='得分：'+score;
     document.getElementById('fill').style.width=Math.max(0,playerHP)+'%';
 }
+
 canvas.innerHTML='';
 ctx.fillStyle='#000';
 ctx.fillRect(0,0,width,height);
