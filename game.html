@@ -23,7 +23,7 @@ body{display:flex;justify-content:center;align-items:center;min-height:100vh;bac
 <h2>坦克大战</h2>
 <div id="score">得分：0</div>
 <div id="health"><span>生命值</span><div id="bar"><div id="fill"></div></div></div>
-<button id="btn">开始游戏</button>
+<button id="btn" onclick="start()">开始游戏</button>
 <div id="info">W/A/S/D 移动<br>空格射击</div>
 </div>
 </div>
@@ -34,7 +34,6 @@ var width=800,height=500;
 var running=false,score=0,playerHP=100;
 var player={x:50,y:450,angle:0,speed:2.5};
 var bullets=[],enemies=[];
-
 document.addEventListener('keydown',function(e){
     if(!running)return;
     if(e.code==='KeyW'){player.y-=player.speed;return;}
@@ -43,20 +42,11 @@ document.addEventListener('keydown',function(e){
     if(e.code==='KeyD'){player.x+=player.speed;return;}
     if(e.code==='Space'){shootPlayer();return;}
 });
-
 function shootPlayer(){
     var angle=player.angle;
-    bullets.push({
-        x:player.x+12,
-        y:player.y+12,
-        angle:angle,
-        player:true,
-        vx:Math.cos(angle)*7,
-        vy:Math.sin(angle)*7
-    });
+    bullets.push({x:player.x+12,y:player.y+12,vx:Math.cos(angle)*7,vy:Math.sin(angle)*7,player:true});
 }
-
-function startGame(){
+function start(){
     running=true;
     score=0;
     playerHP=100;
@@ -68,18 +58,12 @@ function startGame(){
     canvas.innerHTML='';
     ctx.fillStyle='#000';
     ctx.fillRect(0,0,width,height);
-    console.log('游戏启动！');
-    gameLoop();
+    loop();
 }
-
-function gameLoop(){
+function loop(){
     if(!running)return;
-
-    // 边界检查
     if(player.x<0||player.x>width-30)player.x=player.x<0?0:width-30;
     if(player.y<0||player.y>height-30)player.y=player.y<0?0:height-30;
-
-    // 绘制玩家
     ctx.save();
     ctx.translate(player.x+15,player.y+15);
     ctx.rotate(player.angle);
@@ -88,11 +72,7 @@ function gameLoop(){
     ctx.fillStyle='#2d2d2d';
     ctx.fillRect(-18,-15,3,30);
     ctx.fillRect(15,-15,3,30);
-    ctx.fillStyle='#444';
-    ctx.fillRect(-3,-20,6,20);
     ctx.restore();
-
-    // 绘制敌人
     enemies.forEach(function(enemy){
         ctx.save();
         ctx.translate(enemy.x+15,enemy.y+15);
@@ -101,97 +81,51 @@ function gameLoop(){
         ctx.fillRect(-15,-15,30,30);
         ctx.restore();
     });
-
-    // 绘制子弹
-    bullets.forEach(function(bullet){
-        ctx.fillStyle=bullet.player?'#ffff00':'#ff4444';
+    bullets.forEach(function(b){
+        ctx.fillStyle=b.player?'#ffff00':'#ff4444';
         ctx.beginPath();
-        ctx.arc(bullet.x,bullet.y,5,0,Math.PI*2);
+        ctx.arc(b.x,b.y,5,0,Math.PI*2);
         ctx.fill();
     });
-
-    // 更新敌人
     enemies.forEach(function(enemy){
         enemy.y+=0.5;
         if(enemy.y<50){
-            var dx=player.x-enemy.x;
-            var dy=player.y-enemy.y;
-            var dist=Math.sqrt(dx*dx+dy*dy);
-            if(dist>0){
-                enemy.x+=(dx/dist)*1.5;
-                enemy.y+=(dy/dist)*1.5;
-            }
+            var dx=player.x-enemy.x,dy=player.y-enemy.y,d=Math.sqrt(dx*dx+dy*dy);
+            if(d>0){enemy.x+=(dx/d)*1.5;enemy.y+=(dy/d)*1.5;}
             enemy.angle=Math.atan2(dy,dx);
         }
     });
-
-    // 更新子弹
-    bullets.forEach(function(bullet){
-        bullet.x+=bullet.vx;
-        bullet.y+=bullet.vy;
-    });
-
-    // 过滤出界子弹
-    bullets=bullets.filter(function(bullet){
-        if(bullet.x<0||bullet.x>width||bullet.y<0||bullet.y>height){
-            return false;
-        }
-
-        // 玩家子弹击中敌人
-        if(bullet.player){
-            enemies.forEach(function(enemy){
-                if(bullet.x>enemy.x-8&&bullet.x<enemy.x+38&&bullet.y>enemy.y-8&&bullet.y<enemy.y+38){
+    bullets.forEach(function(b){b.x+=b.vx;b.y+=b.vy;});
+    bullets=bullets.filter(function(b){
+        if(b.x<0||b.x>width||b.y<0||b.y>height)return false;
+        if(b.player){
+            enemies.forEach(function(e){
+                if(b.x>e.x-8&&b.x<e.x+38&&b.y>e.y-8&&b.y<e.y+38){
                     score+=10;
-                    bullet.hit=true;
                 }
             });
             return true;
         }
-
-        // 敌人子弹击中玩家
-        if(!bullet.player){
-            if(bullet.x>player.x+2&&bullet.x<player.x+28&&bullet.y>player.y+2&&bullet.y<player.y+28){
+        if(!b.player){
+            if(b.x>player.x+2&&b.x<player.x+28&&b.y>player.y+2&&b.y<player.y+28){
                 playerHP-=1;
-                if(playerHP<=0){
-                    running=false;
-                    alert('游戏结束！得分：'+score);
-                }
-                bullet.hit=true;
+                if(playerHP<=0){running=false;alert('游戏结束！得分：'+score);}
             }
             return true;
         }
         return true;
     });
-
-    // 生成新敌人
-    if(Math.random()<0.01){
-        var enemy={
-            x:Math.random()*width,
-            y:-50,
-            angle:Math.random()*Math.PI*2,
-            speed:0.5
-        };
-        enemies.push(enemy);
+    if(Math.random()<0.02){
+        enemies.push({x:Math.random()*width,y:-50,angle:Math.random()*Math.PI*2});
     }
-
-    // 过滤死掉的敌人
-    enemies=enemies.filter(function(enemy){
-        return enemy.y<height-30;
-    });
-
-    // 更新 UI
+    enemies=enemies.filter(function(e){return e.y<height-30;});
     document.getElementById('score').innerHTML='得分：'+score;
     document.getElementById('fill').style.width=Math.max(0,playerHP)+'%';
-
-    // 继续循环
-    setTimeout(gameLoop,20);
+    setTimeout(loop,20);
 }
-
-// 初始化
 canvas.innerHTML='';
 ctx.fillStyle='#000';
 ctx.fillRect(0,0,width,height);
-console.log('游戏已加载！点击"开始游戏"按钮开始。');
 </script>
 </body>
 </html>
