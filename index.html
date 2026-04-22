@@ -171,7 +171,7 @@
                 <div class="stat-label">击杀</div>
                 <div class="stat-value" id="killsText">0</div>
             </div>
-            <button class="btn btn-primary" id="startBtn" onclick="startGame()">开始游戏</button>
+            <button class="btn btn-primary" id="startBtn" onclick="startGame(); console.log('开始游戏按钮被点击！')">开始游戏</button>
             <button class="btn btn-secondary" onclick="resetGame()">重置游戏</button>
             <div class="controls-info">
                 <strong>操作说明：</strong><br>
@@ -555,6 +555,15 @@
             // 初始绘制
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 调试：页面加载完成后的检查
+            console.log('游戏页面加载完成！');
+            console.log('按钮状态:', document.getElementById('startBtn'));
+
+            // 自动检查按钮点击事件
+            if (document.getElementById('startBtn')) {
+                console.log('开始游戏按钮已绑定');
+            }
         })();
     </script>
 </body>
